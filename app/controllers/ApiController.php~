@@ -10,63 +10,51 @@ class ApiController extends \lithium\action\Controller {
 
 		$results = "";
 
-		if($_POST['requestData'] == "") { 
+		if($id == "") {
 		
-		  if($id != "") { // GET
+		  if($_POST['requestJsonString'] != "") { // CREATE
+
+	  		$requestArray = json_decode($_POST['requestJsonString'], true);
+
+		    $object = Objects::create($requestArray);
+		    
+		    $object->save();
+		
+			$lastInsertId = (string) $object->data("_id");
+		
+		    $results = json_encode(array("_id" => $lastInsertId)); // return insertId
+		    
+		  }
+
+		}
+		else { 
+		
+		  if($_POST['requestJsonString'] == "") { // RETRIEVE
+
+		  	$queryResult = Objects::first(array('conditions' => array("_id" => $id)));
+		
+		  	$results = json_encode($queryResult->to('array'));
+		  	
+		  }
+		  else { // UPDATE
+		  
+	  		$requestArray = json_decode($_POST['requestJsonString'], true);
+			$reset = ($_POST['reset'] == "true" ? true:false);
 			
-			$queryResult = Objects::first(array('conditions' => array("_id" => $id)));
+			if($reset) { // Delete all fields expect for the ones specified
 			
-			if($subType == "") {
+			  // This feature is not implemented yet
 			
-				$results = json_encode($queryResult->to('array'));			
+			  $results = json_encode(array("update" => "failure"));
+			
 			}
 			else {
-
-				$subQueryResults = Objects::all(array('conditions' => array("type" => $subType, $queryResult->type."_id" => $id)));
-				
-				$results = json_encode($subQueryResults->to('array'));
+			
+			  $success = Objects::update($requestArray, array('_id' => $id));
+			  
+			  $results = json_encode(array("update" => "success"));
 			
 			}
-
-		  }
-		
-		}
-		else {
-		
-		  $requestJson = json_decode($_POST['requestData'], true);
-
-		  $requestJsonId = $requestJson["_id"];
-		  
-		  if($id == "") {
-		  
-		    if($requestJsonId == "") { // INSERT (Alone)
-		
-			  $success = Objects::create($requestJson)->save();
-			
-			  $results = json_encode(array("success" => true));
-		
-		    }
-		    else { // UPDATE
-		  
-		      unset($requestJson["_id"]);
-
-		      $success = Objects::update($requestJson, array('_id' => $requestJsonId));
-		    
-		      $results = json_encode(array("success" => treu));
-
-		    }
-		  
-		  }
-		  elseif ($subType != "") { // INSERT (as link to another object)
-
-		    $queryResult = Objects::first(array('conditions' => array("_id" => $id)));
-		    
-			$requestJson["type"] = $subType;
-			$requestJson[$queryResult->type."_id"] = $id;
-
-			$success = Objects::create($requestJson)->save();
-			
-			$results = json_encode(array("success" => true));
 		  
 		  }
 		  

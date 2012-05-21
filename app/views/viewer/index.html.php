@@ -27,11 +27,11 @@
 
 		  data: {
 		  
-		    requestData: $("#request").val()
-		  
+		    requestJsonString: $("#request").val(),
+		    reset: $("#reset").is(':checked')
 		  },
 
-		  type: "POST",
+		  type: $("input:radio[name=method]:checked").val(),
 
 		  url: $("#url").val(),
 
@@ -58,6 +58,18 @@
 			}
 
 		});
+		
+		$("#method-get").click(function() {
+
+		  $("#request").attr("disabled", "disabled");
+
+		});
+
+		$("#method-post").click(function() {
+
+		  $("#request").removeAttr("disabled");
+
+		});
 
 	  });
 
@@ -73,7 +85,21 @@
 	  
 	  	<td valign = "top">URL:</td>
 
-	  	<td><input type = "text" id = "url" value = "api/index/4fb4e529b034e92143000000/activity" style = "width: 400px;" /> <input type = "button" value = "Send" onclick = "send();" /></td>
+	  	<td><input type = "text" id = "url" value = "api/index/4fb9d473b034e9182e000001/" style = "width: 400px;" /></td>
+	  	
+	  	<td valign = "top"><input type = "button" value = "Send" onclick = "send();" /></td>
+	  
+	  <tr>
+		
+	  <tr>
+	  
+	  	<td valign = "top">Method:</td>
+
+	  	<td>
+	  	
+	  	  <input type = "radio" name = "method" id = "method-post" value = "post" checked = "checked" /> <label for = "method-post">POST</label> <input type = "radio" name = "method" id = "method-get" value = "get" /> <label for = "method-get">GET</label>
+	  	  
+	  	</td>
 	  
 	  <tr>
 		
@@ -82,9 +108,19 @@
 	  	<td valign = "top">Request:</td>
 
 	  	<td><textarea id = "request" style = "width: 400px; height: 100px;"></textarea></td>
+	  	
+	  	<td valign = "top"><a href = "javascript: $('#request').val('');">Clear</a></td>
 	  
 	  <tr>
 	  
+	  <tr>
+	  
+	  	<td valign = "top">Reset:</td>
+
+	  	<td><input type = "checkbox" id = "reset" checked = "checked" /> <label for = "reset">Reset</label>
+	  
+	  <tr>
+		
 	  <tr>
 	  
 	  	<td valign = "top">Response:</td>
