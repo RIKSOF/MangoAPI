@@ -23,28 +23,41 @@
 
 	  function send() {
 
-		$.ajax({
+		if($("input:radio[name=method]:checked").val() == "post" && $("#request").val() == "") {
+				
+		  $("#request").effect("highlight", {}, 3000);
+				
+		}
+		else {
+		
+		  $.ajax({
 
-		  data: {
+		    data: {
 		  
-		    requestJsonString: $("#request").val(),
-		    reset: $("#reset").is(':checked')
-		  },
+		      method: $("input:radio[name=method]:checked").val(),
+		      requestJsonString: $("#request").val(),
+		      reset: $("#reset").is(':checked')
+		    
+		    },
 
-		  type: $("input:radio[name=method]:checked").val(),
+		    type: $("input:radio[name=method]:checked").val(),
 
-		  url: $("#url").val(),
+		    url: $("#url").val(),
 
-		  success: function(response) {
+		    success: function(response) {
 
-			responseJson = $.parseJSON(response);
+			  responseJson = $.parseJSON(response);
 
-		  	$("#response").html(JSON.stringify(responseJson, undefined, 2));
+		  	  $("#response").html(JSON.stringify(responseJson, undefined, 2));
+		  	
+		  	  $("#request").val("");
 
-		  }
+		    }
 
-		});
+		  });
 
+	    }
+	    
 	  }
 
       $(document).ready(function(){
@@ -62,6 +75,7 @@
 		$("#method-get").click(function() {
 
 		  $("#request").attr("disabled", "disabled");
+		  $("#request").val("");
 
 		});
 
@@ -85,7 +99,7 @@
 	  
 	  	<td valign = "top">URL:</td>
 
-	  	<td><input type = "text" id = "url" value = "api/index/4fb9d473b034e9182e000001/" style = "width: 400px;" /></td>
+	  	<td><input type = "text" id = "url" value = "api/index/" style = "width: 400px;" /></td>
 	  	
 	  	<td valign = "top"><input type = "button" value = "Send" onclick = "send();" /></td>
 	  
