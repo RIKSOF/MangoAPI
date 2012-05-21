@@ -10,7 +10,7 @@ class ApiController extends \lithium\action\Controller {
 
 		$results = "";
 		
-		if($_REQUEST['q'] == "") { // Normal API
+		if($_REQUEST['q'] && $_REQUEST['q'] == "") { // Normal API
 
 		  if($type == "") { // api/<id>
 
