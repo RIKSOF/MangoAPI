@@ -35,8 +35,7 @@
 		    data: {
 		  
 		      method: $("input:radio[name=method]:checked").val(),
-		      requestJsonString: $("#request").val(),
-		      reset: $("#reset").is(':checked')
+		      requestJsonString: $("#request").val()
 		    
 		    },
 
@@ -127,14 +126,6 @@
 	  
 	  <tr>
 	  
-	  <tr>
-	  
-	  	<td valign = "top">Reset:</td>
-
-	  	<td><input type = "checkbox" id = "reset" checked = "checked" /> <label for = "reset">Reset</label>
-	  
-	  <tr>
-		
 	  <tr>
 	  
 	  	<td valign = "top">Response:</td>

@@ -6,12 +6,14 @@ use app\models\Objects;
 
 class ApiController extends \lithium\action\Controller {
 
-	public function index($id = "", $type = "") {
+  public function index($id = "", $type = "") {
 
- 	  $results = "";
+    $results = "";
 
-	  if($type == "" && !isset($_REQUEST['q'])) { // api/<id>
-
+	if($type == "") { // api/<id>
+	
+	  if(!isset($_REQUEST['q'])) {
+	  
 		if($id == "") {
 
 		  if($_REQUEST['method'] == "post") { // CREATE
@@ -43,104 +45,100 @@ class ApiController extends \lithium\action\Controller {
 			$requestArray = json_decode($_REQUEST['requestJsonString'], true);
 			$reset = ($_REQUEST['reset'] == "true" ? true:false);
 	
-			if($reset) { // Delete all fields expect for the ones specified
-	
-			  // This feature is not implemented yet
-	
-			  $results = json_encode(array("update" => "failure"));
-	
-			}
-			else {
-	
-			  $success = Objects::update($requestArray, array('_id' => $id));
+			$success = Objects::update($requestArray, array('_id' => $id));
 		  
-			  $results = json_encode(array("update" => "success"));
-	
-			}
+			$results = json_encode(array("update" => "success"));
 	  
 		  }
 	  
 		}
 
 	  }
-	  elseif () {
+	  else {
 	  
 		$queryResults = Objects::find('all', array('conditions' => json_decode($_REQUEST['q'], true)));
 
 		$results = json_encode($queryResults->to('array'));
 
 	  }
-	  else { // api/<id>/<type>
-
-		if($_REQUEST['method'] == "post") { // CREATE
 	  
-		  $requestArray = json_decode($_REQUEST['requestJsonString'], true);
+	}
+	else { // api/<id>/<type>
 
-		  $object = Objects::create($requestArray);
-		
-		  $object->save();
+	  if($_REQUEST['method'] == "post") { // CREATE
+	  
+	    $requestArray = json_decode($_REQUEST['requestJsonString'], true);
 
-		  $lastInsertId = (string) $object->data("_id");
-
-		  // Add the _id to the main object
-
-		  $queryResult = Objects::first(array('conditions' => array("_id" => $id)));
-
-		  $queryResultArray = $queryResult->to('array');
-
-		  if(!isset($queryResultArray[$type])) {
-		
-		    $queryResultArray[$type] = array();
-		
-		  }
-
-		  array_push($queryResultArray[$type], $lastInsertId);
-		
-		  unset($queryResultArray["_id"]);
-		
-		  $success = Objects::update($queryResultArray, array('_id' => $id));
-
-		  // 
+	    $object = Objects::create($requestArray);
 	
-		  $results = json_encode(array("_id" => $lastInsertId)); // return insertId            
-	  
+	    $object->save();
+
+	    $lastInsertId = (string) $object->data("_id");
+
+		// Add the _id to the main object
+
+		$queryResult = Objects::first(array('conditions' => array("_id" => $id)));
+
+		$queryResultArray = $queryResult->to('array');
+
+		if(!isset($queryResultArray[$type])) {
+		
+		  $queryResultArray[$type] = array();
+		
 		}
-		else { // RETRIEVE
-	  
-		  $queryResult = Objects::first(array('conditions' => array("_id" => $id)));
 
-		  $queryResultArray = $queryResult->to('array');
-
-		  if($queryResultArray[$type]) {
+		array_push($queryResultArray[$type], $lastInsertId);
 		
-			$subQueryResults = Objects::all(array('conditions' => array("_id" => $queryResultArray[$type])));
-
-			$results = json_encode($subQueryResults->to('array'));
+		unset($queryResultArray["_id"]);
 		
-		  }
-		  else {
+		$success = Objects::update($queryResultArray, array('_id' => $id));
 
-			$results = json_encode(array());
-		
-		  }
-	  		  
-		}
+		// 
+	
+		$results = json_encode(array("_id" => $lastInsertId)); // return insertId            
 	  
 	  }
+	  else { // RETRIEVE
+	  
+		$queryResult = Objects::first(array('conditions' => array("_id" => $id)));
+
+		$queryResultArray = $queryResult->to('array');
+
+		if($queryResultArray[$type]) {
 		
- 	  $this->set(compact("results"));
+		  $subQueryResults = Objects::all(array('conditions' => array("_id" => $queryResultArray[$type])));
+
+		  $results = json_encode($subQueryResults->to('array'));
 		
-	  return $this->render(array('layout' => false));
+		}
+		else {
+
+	      $results = json_encode(array());
+		
+		}
+	  		  
+      }
+	  
+	}
+		
+ 	$this->set(compact("results"));
+		
+	return $this->render(array('layout' => false));
 	
-	}
+  }
 
-	public function to_string() {
-		return "";
-	}
+  public function to_string() {
+	
+	return "";
+  
+  }
 
-	public function to_json() {
-		return $this->render(array('json' => ''));
-	}
+  public function to_json() {
+	
+	return $this->render(array('json' => ''));
+  
+  }
+
 }
 
 ?>

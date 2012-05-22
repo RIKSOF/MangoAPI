@@ -25,7 +25,7 @@
 
 		if($("input:radio[name=method]:checked").val() == "post" && $("#request").val() == "") {
 				
-		  $("#request").effect("highlight", {}, 3000);
+		  alert("Please provide the Request JSON.");
 				
 		}
 		else {
