@@ -1,1 +1,1 @@
-<?php echo $results; ?>
+<?php echo $resultsJsonString; ?>

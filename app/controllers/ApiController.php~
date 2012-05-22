@@ -8,7 +8,13 @@ class ApiController extends \lithium\action\Controller {
 
   public function index($id = "", $type = "") {
 
+	// Variable Initializations
+
     $results = "";
+
+	$typeSuffixed = "_".$type;
+	
+	// Algo
 
 	if($type == "") { // api/<id>
 	
@@ -18,16 +24,10 @@ class ApiController extends \lithium\action\Controller {
 
 		  if($_REQUEST['method'] == "post") { // CREATE
 
-			$requestArray = json_decode($_REQUEST['requestJsonString'], true);
+			$insertId = $this->createDocument(json_decode($_REQUEST['requestJsonString'], true));
 
-		    $object = Objects::create($requestArray);
-		
-		    $object->save();
-
-			$lastInsertId = (string) $object->data("_id");
-
-		    $results = json_encode(array("_id" => $lastInsertId)); // return insertId
-		
+		    $results = array("_id" => $insertId);
+		    		
 		  }
 
 		}
@@ -35,30 +35,23 @@ class ApiController extends \lithium\action\Controller {
 
 		  if($_REQUEST['method'] == "get") { // RETRIEVE
 
-	  	    $queryResult = Objects::first(array('conditions' => array("_id" => $id)));
-
-	  	    $results = json_encode($queryResult->to('array'));
+	  	    $results = $this->getDocument($id);
 	  	
 		  }
 		  else { // UPDATE
 	  
-			$requestArray = json_decode($_REQUEST['requestJsonString'], true);
-			$reset = ($_REQUEST['reset'] == "true" ? true:false);
-	
-			$success = Objects::update($requestArray, array('_id' => $id));
-		  
-			$results = json_encode(array("update" => "success"));
+	  		$status = $this->updateDocument($id, json_decode($_REQUEST['requestJsonString'], true));
+	  
+			$results = array("success" => $status);
 	  
 		  }
 	  
 		}
 
 	  }
-	  else {
+	  else { // Search
 	  
-		$queryResults = Objects::find('all', array('conditions' => json_decode($_REQUEST['q'], true)));
-
-		$results = json_encode($queryResults->to('array'));
+	    $results = $this->searchDocuments(json_decode($_REQUEST['q'], true));
 
 	  }
 	  
@@ -66,54 +59,42 @@ class ApiController extends \lithium\action\Controller {
 	else { // api/<id>/<type>
 
 	  if($_REQUEST['method'] == "post") { // CREATE
-	  
-	    $requestArray = json_decode($_REQUEST['requestJsonString'], true);
 
-	    $object = Objects::create($requestArray);
-	
-	    $object->save();
+		$insertId = $this->createDocument(json_decode($_REQUEST['requestJsonString'], true));
 
-	    $lastInsertId = (string) $object->data("_id");
+		// Get the main object
 
-		// Add the _id to the main object
-
-		$queryResult = Objects::first(array('conditions' => array("_id" => $id)));
-
-		$queryResultArray = $queryResult->to('array');
-
-		if(!isset($queryResultArray[$type])) {
+		$queryResultArray = $this->getDocument($id);
 		
-		  $queryResultArray[$type] = array();
+		// Add the _id to the main object
+		
+		if(!isset($queryResultArray[$typeSuffixed])) {
+		
+		  $queryResultArray[$typeSuffixed] = array();
 		
 		}
 
-		array_push($queryResultArray[$type], $lastInsertId);
+		array_push($queryResultArray[$typeSuffixed], $insertId);
 		
-		unset($queryResultArray["_id"]);
-		
-		$success = Objects::update($queryResultArray, array('_id' => $id));
-
+	  	$this->updateDocument($id, $queryResultArray);
+	  
 		// 
 	
-		$results = json_encode(array("_id" => $lastInsertId)); // return insertId            
+		$results = array("_id" => $insertId);
 	  
 	  }
 	  else { // RETRIEVE
 	  
-		$queryResult = Objects::first(array('conditions' => array("_id" => $id)));
-
-		$queryResultArray = $queryResult->to('array');
-
-		if($queryResultArray[$type]) {
+		$queryResultArray = $this->getDocument($id);
 		
-		  $subQueryResults = Objects::all(array('conditions' => array("_id" => $queryResultArray[$type])));
-
-		  $results = json_encode($subQueryResults->to('array'));
+		if($queryResultArray[$typeSuffixed]) {
 		
+	      $results = $this->searchDocuments(array("_id" => $queryResultArray[$typeSuffixed]));
+
 		}
 		else {
 
-	      $results = json_encode(array());
+	      $results = array();
 		
 		}
 	  		  
@@ -121,7 +102,9 @@ class ApiController extends \lithium\action\Controller {
 	  
 	}
 		
- 	$this->set(compact("results"));
+    $resultsJsonString = json_encode($results);
+		
+ 	$this->set(compact("resultsJsonString"));
 		
 	return $this->render(array('layout' => false));
 	
@@ -136,6 +119,46 @@ class ApiController extends \lithium\action\Controller {
   public function to_json() {
 	
 	return $this->render(array('json' => ''));
+  
+  }
+  
+  // Custom (private) function 
+  
+  private function createDocument($data) {
+  
+    $object = Objects::create($data);
+
+    $object->save();
+
+	return (string) $object->data("_id");
+  
+  }
+  
+  private function getDocument($id) {
+
+	$queryResult = Objects::first(array('conditions' => array("_id" => $id)));
+
+    return $queryResult->to('array');
+  
+  }
+  
+  private function updateDocument($id, $data) {
+  
+    if(isset($data["_id"])) {
+
+	  unset($data["_id"]);
+	 
+	}
+  
+	return Objects::update($data, array('_id' => $id));
+
+  }
+  
+  private function searchDocument($conditions) {
+  
+	$queryResults = Objects::find('all', array('conditions' => $conditions));
+
+	$results = $queryResults->to('array');
   
   }
 

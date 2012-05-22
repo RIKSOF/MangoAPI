@@ -1,1 +1,1 @@
-<pre><code><?php echo $results; ?></pre></code>
+<?php echo $results; ?>

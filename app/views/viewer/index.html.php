@@ -25,7 +25,7 @@
 
 		if($("input:radio[name=method]:checked").val() == "post" && $("#request").val() == "") {
 				
-		  alert("Please provide the Request JSON.");
+		  alert("Please provide the Request JSON or use the GET method.");
 				
 		}
 		else {
