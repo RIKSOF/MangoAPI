@@ -282,14 +282,13 @@ class ApiController extends \lithium\action\Controller {
 
 	  // Trigger Now
       
-      file_put_contents("/home/zeeshan/Desktop/update_notification.txt",
+      error_log("Notify the following deviceId(s):\n\n".
+    			
+    			implode(", ", $deviceIds)."\n\n".
+    			"to update the objects with _id(s):\n\n".
+    			$id."\n\n\n\n\n\n", 
 
-    				    "Notify the following deviceId(s):\n\n".
-    				    implode(", ", $deviceIds)."\n\n".
-    				    "to update the objects with _id(s):\n\n".
-    				    $id."\n\n\n\n\n\n", 
-
-    				    FILE_APPEND);
+    		 	FILE_APPEND);
     				    
     }
   
