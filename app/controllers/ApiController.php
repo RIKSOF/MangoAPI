@@ -26,128 +26,148 @@ class ApiController extends \lithium\action\Controller {
 
 	// Variable Initializations
 
+	$deviceId = $_REQUEST['deviceId'];
+	$method = $_REQUEST['method'];
+	$requestJsonString = $_REQUEST['requestJsonString'];
+
+	$requestArray = "";
+	
+    $typePrefixed = "_".$type;
+    
     $results = "";
     $statusMessage = "";
 
-	$typePrefixed = "_".$type;
+	// Validate Request
 	
-	// Algo
+	$requestArray = $this->decodeJsonString($requestJsonString);
 
-	if($type == "") { // URL: api/<id>
+    if($method == "post" && $requestArray == false) {
+      
+      $statusMessage = array("error" => "Malformed JSON");
+      
+	}
+	else { // Algo
+
+	  if($type == "") { // URL: api/<id>
 	
-	  if(!isset($_REQUEST['q'])) {
+	    if(!isset($_REQUEST['q'])) {
 	  
-		if($id == "") {
+		  if($id == "") {
 
-		  if($_REQUEST['method'] == "post") { // CREATE
+		    if($method == "post") { // CREATE
 
-			$insertId = $this->createDocument(json_decode($_REQUEST['requestJsonString'], true));
+			  $insertId = $this->createDocument($requestArray);
 
-		    $statusMessage = array("_id" => $insertId);
-		    		
+		      $statusMessage = array("_id" => $insertId);
+
+		    }
+
 		  }
+		  else { 
 
-		}
-		else { 
+		    if($method == "get") { // RETRIEVE
 
-		  if($_REQUEST['method'] == "get") { // RETRIEVE
-
-	  	    $results = $this->getDocument($id);
+	  	      $results = $this->getDocument($id);
 	  	
+		    }
+		    else { // UPDATE
+	  
+	  		  $status = $this->updateDocument($id, $requestArray);
+	  
+			  $statusMessage = array("success" => $status);
+	  
+		    }
+	  
 		  }
-		  else { // UPDATE
-	  
-	  		$status = $this->updateDocument($id, json_decode($_REQUEST['requestJsonString'], true));
-	  
-			$statusMessage = array("success" => $status);
-	  
+
+	    }
+	    else { // Search
+
+		  $qArray = $this->decodeJsonString($_REQUEST['q']);
+		  
+    	  if($qArray == false) {
+      
+      		$statusMessage = array("error" => "Malformed JSON");
+	
 		  }
+		  else {	
 	  
-		}
-
-	  }
-	  else { // Search
-	  
-	    $results = $this->searchDocuments(json_decode($_REQUEST['q'], true));
-
-	  }
-	  
-	}
-	else { // URL: api/<id>/<type>
-
-	  if($_REQUEST['method'] == "post") { // CREATE (a new object which refers to the main object)
-	  
-	    $insertId = $this->createTypedDocument(json_decode($_REQUEST['requestJsonString'], true), $id, $type);
-
-		$statusMessage = array("_id" => $insertId);
-	  
-	  }
-	  else { // RETRIEVE
-	  
-		$document = $this->getDocument($id);
-		
-		if(isset($document[$typePrefixed])) {
-		
-	      $results = $this->searchDocuments(array("_id" => $document[$typePrefixed]));
-
-		}
-	  		  
-      }
-	  
-	}
-
-	// Realtime Update Notification
-	
-	if($results != "") {
-
-      $deviceId = "";
-      
-      if(isset($_REQUEST['deviceId']) && $_REQUEST['deviceId'] != "") {
-      
-        $deviceId = $_REQUEST['deviceId'];
-      
-      }
-	
-	  if($deviceId != "") {
-
-		// Token
-		
-	    $tokenId = "";
-	    
-	    $existingToken = Objects::first(array('conditions' => array("__deviceId" => $deviceId)));
-	    
-	    if($existingToken) { // Token already exists
-
-		  $existingTokenArray = $existingToken->to('array');
-
-	      $tokenId = $existingTokenArray["_id"];
+	      	$results = $this->searchDocuments($qArray);
 	      
+	      }
+
 	    }
-	    else{ // Create a new token
-	    
-	      $tokenId = $this->createDocument(array("__deviceId" => $deviceId));
-	    
-	    }
-	    
-	    // Add the Token
-	    
-	    if($type != "" || isset($_REQUEST['q'])) {
-	    
-	      foreach ($results as $result) {
 	  
-			$this->updateTokenList($result, $tokenId);
+	  }
+	  else { // URL: api/<id>/<type>
+
+	    if($method == "post") { // CREATE (a new object which refers to the main object)
 	  
+	      $insertId = $this->createTypedDocument($requestArray, $id, $type);
+
+		  $statusMessage = array("_id" => $insertId);
+	  
+ 	    }
+	    else { // RETRIEVE
+	  
+		  $document = $this->getDocument($id);
+		
+		  if(isset($document[$typePrefixed])) {
+		
+	        $results = $this->searchDocuments(array("_id" => $document[$typePrefixed]));
+
+		  }
+	  		  
+        }
+	  
+	  }
+
+	  // Realtime Update Notification
+	
+	  if($results != "") {
+
+	    if($deviceId != "") {
+
+		  // Token
+		
+	      $tokenId = "";
+	    
+	      $existingToken = Objects::first(array('conditions' => array("__deviceId" => $deviceId)));
+	    
+	      if($existingToken) { // Token already exists
+
+		    $existingTokenArray = $existingToken->to('array');
+
+	        $tokenId = $existingTokenArray["_id"];
+	      
+	      }
+	      else{ // Create a new token
+	    
+	        $tokenId = $this->createDocument(array("__deviceId" => $deviceId));
+	    
+	      }
+	    
+	      // Add the Token
+	    
+	      if($type != "" || isset($_REQUEST['q'])) {
+	    
+	        foreach ($results as $result) {
+	  
+			  $this->updateTokenList($result, $tokenId);
+	  
+	        }
+	    
+	      }
+	      else {
+	    
+	        $this->updateTokenList($results, $tokenId);
+	    
 	      }
 	    
 	    }
-	    else {
-	    
-	      $this->updateTokenList($results, $tokenId);
-	    
-	    }
-	    
-	  }
 	
+	  }
+
 	}
 
 	// Return results
@@ -231,7 +251,7 @@ class ApiController extends \lithium\action\Controller {
   private function getDocument($id) {
 
 	$queryResult = Objects::first(array('conditions' => array("_id" => $id)));
-
+	
     return $queryResult->to('array');
   
   }
@@ -300,6 +320,23 @@ class ApiController extends \lithium\action\Controller {
     $objectArray["_token"] = array_unique($objectArray["_token"]);
 
     $this->updateDocument($objectArray["_id"], $objectArray, false);
+  
+  }
+
+  private function decodeJsonString($jsonString) {
+  
+    $array = json_decode($jsonString, true);
+    
+    if(json_last_error() == JSON_ERROR_SYNTAX) {
+    
+      return false;
+    
+    }
+    else {
+    
+      return $array;
+    
+    }
   
   }
 

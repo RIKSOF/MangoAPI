@@ -51,8 +51,12 @@
 			  responseJson = $.parseJSON(response);
 
 		  	  $("#response").html(JSON.stringify(responseJson, undefined, 2));
-		  	
-		  	  $("#request").val("");
+
+			  if(!responseJson.error) {		  	
+		  	  
+		  	  	$("#request").val("");
+		  	  
+		  	  }
 
 		    }
 
