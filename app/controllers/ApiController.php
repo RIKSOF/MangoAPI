@@ -26,7 +26,8 @@ class ApiController extends \lithium\action\Controller {
 
 	// Variable Initializations
 
-    $results = array();
+    $results = "";
+    $statusMessage = "";
 
 	$typePrefixed = "_".$type;
 	
@@ -42,7 +43,7 @@ class ApiController extends \lithium\action\Controller {
 
 			$insertId = $this->createDocument(json_decode($_REQUEST['requestJsonString'], true));
 
-		    $results = array("_id" => $insertId);
+		    $statusMessage = array("_id" => $insertId);
 		    		
 		  }
 
@@ -58,7 +59,7 @@ class ApiController extends \lithium\action\Controller {
 	  
 	  		$status = $this->updateDocument($id, json_decode($_REQUEST['requestJsonString'], true));
 	  
-			$results = array("success" => $status);
+			$statusMessage = array("success" => $status);
 	  
 		  }
 	  
@@ -78,7 +79,7 @@ class ApiController extends \lithium\action\Controller {
 	  
 	    $insertId = $this->createTypedDocument(json_decode($_REQUEST['requestJsonString'], true), $id, $type);
 
-		$results = array("_id" => $insertId);
+		$statusMessage = array("_id" => $insertId);
 	  
 	  }
 	  else { // RETRIEVE
@@ -89,11 +90,6 @@ class ApiController extends \lithium\action\Controller {
 		
 	      $results = $this->searchDocuments(array("_id" => $document[$typePrefixed]));
 
-		}
-		else {
-
-	      $results = array();
-		
 		}
 	  		  
       }
@@ -156,9 +152,25 @@ class ApiController extends \lithium\action\Controller {
 
 	// Return results
 	
-    $resultsJsonString = json_encode($results);
+	$responseJsonString = "";
+	
+	if($results != "") {
+
+      $responseJsonString = json_encode($results);
+      
+    }
+    elseif ($statusMessage != "") {
+    
+      $responseJsonString = json_encode($statusMessage);
+    
+    }
+    else {
+    
+      $responseJsonString = json_encode(array());
+    
+    }
 		
- 	$this->set(compact("resultsJsonString"));
+ 	$this->set(compact("responseJsonString"));
 		
 	return $this->render(array('layout' => false));
 	
@@ -224,15 +236,46 @@ class ApiController extends \lithium\action\Controller {
   
   }
   
-  private function updateDocument($id, $data) {
+  private function updateDocument($id, $changeData, $triggerRealtimeUpdateNotification = true) {
   
-    if(isset($data["_id"])) {
+    if(isset($changeData["_id"])) {
 
-	  unset($data["_id"]);
+	  unset($changeData["_id"]);
 	 
 	}
   
-	return Objects::update($data, array('_id' => $id));
+    // Trigget Realtime Update Notification
+  
+    if($triggerRealtimeUpdateNotification == true) {
+
+      $originalObject = $this->getDocument($id);
+      
+      $deviceIds = array();
+      
+      foreach($originalObject["_token"] as $tokenId) {
+      
+        $tokenObject = $this->getDocument($tokenId);
+        
+        array_push($deviceIds, $tokenObject["__deviceId"]);
+      
+      }
+
+	  // Trigger Now
+      
+      file_put_contents("/home/zeeshan/Desktop/update_notification.txt",
+
+    				    "Notify the following deviceId(s):\n\n".
+    				    implode(", ", $deviceIds)."\n\n".
+    				    "to update the objects with _id(s):\n\n".
+    				    $id."\n\n\n\n\n\n", 
+
+    				    FILE_APPEND);
+    				    
+    }
+  
+    //
+  
+	return Objects::update($changeData, array('_id' => $id));
 
   }
   
@@ -256,7 +299,7 @@ class ApiController extends \lithium\action\Controller {
 
     $objectArray["_token"] = array_unique($objectArray["_token"]);
 
-    $this->updateDocument($objectArray["_id"], $objectArray);
+    $this->updateDocument($objectArray["_id"], $objectArray, false);
   
   }
 
