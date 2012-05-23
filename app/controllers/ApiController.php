@@ -114,7 +114,7 @@ class ApiController extends \lithium\action\Controller {
 		
 		  if(isset($document[$typePrefixed])) {
 		
-	        $results = $this->searchDocuments(array("_id" => $document[$typePrefixed]));
+	        $results = $this->searchDocuments(array("_id" => $document[$typePrefixed]["_member"]));
 
 		  }
 	  		  
@@ -234,13 +234,13 @@ class ApiController extends \lithium\action\Controller {
 		
 	if(!isset($mainDocument[$typePrefixed])) {
 		
-	  $mainDocument[$typePrefixed] = array();
-		
+	  $mainDocument[$typePrefixed] = array("_member" => array(), "_token" => array());
+	
 	}
+	
+	array_push($mainDocument[$typePrefixed]["_member"], $insertId);
 
-	array_push($mainDocument[$typePrefixed], $insertId);
-
-	$mainDocument[$typePrefixed] = array_unique($mainDocument[$typePrefixed]);
+	$mainDocument[$typePrefixed]["_member"] = array_unique($mainDocument[$typePrefixed]["_member"]);
 
   	$this->updateDocument($mainDocumentId, $mainDocument, false);
 	  
