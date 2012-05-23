@@ -30,10 +30,13 @@
 		}
 		else {
 		
+		  $("#response").html("");
+		
 		  $.ajax({
 
 		    data: {
 		  
+		      deviceId: $("#deviceId").val(),
 		      method: $("input:radio[name=method]:checked").val(),
 		      requestJsonString: $("#request").val()
 		    
@@ -106,6 +109,14 @@
 		
 	  <tr>
 	  
+	  	<td valign = "top">Device Id:</td>
+
+	  	<td><input type = "text" id = "deviceId" value = "0001" style = "width: 400px;" /></td>
+	  	
+	  <tr>
+		
+	  <tr>
+	  
 	  	<td valign = "top">Method:</td>
 
 	  	<td>
@@ -113,6 +124,8 @@
 	  	  <input type = "radio" name = "method" id = "method-get" value = "get" checked = "checked" /> <label for = "method-get">GET</label>
 
 	  	  <input type = "radio" name = "method" id = "method-post" value = "post" /> <label for = "method-post">POST</label>
+	  	  
+	  	  <input type = "radio" name = "method" id = "method-delete" value = "delete" disabled = "disabled" /> <label for = "method-delete">DELETE</label>
 	  	  
 	  	</td>
 	  

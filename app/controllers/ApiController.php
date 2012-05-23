@@ -32,7 +32,7 @@ class ApiController extends \lithium\action\Controller {
 	
 	// Algo
 
-	if($type == "") { // api/<id>
+	if($type == "") { // URL: api/<id>
 	
 	  if(!isset($_REQUEST['q'])) {
 	  
@@ -72,7 +72,7 @@ class ApiController extends \lithium\action\Controller {
 	  }
 	  
 	}
-	else { // api/<id>/<type>
+	else { // URL: api/<id>/<type>
 
 	  if($_REQUEST['method'] == "post") { // CREATE (a new object which refers to the main object)
 	  
@@ -114,34 +114,42 @@ class ApiController extends \lithium\action\Controller {
 	
 	  if($deviceId != "") {
 
+		// Token
+		
+	    $tokenId = "";
+	    
 	    $existingToken = Objects::first(array('conditions' => array("__deviceId" => $deviceId)));
-file_put_contents("/home/zeeshan/Desktop/fpc.txt", $existingToken);
-	    $tokenId = $existingTokenId = (isset($existingToken->_id) ? $existingToken->_id : "");
 	    
-	    if($existingTokenId == "") {
+	    if($existingToken) { // Token already exists
+
+		  $existingTokenArray = $existingToken->to('array');
+
+	      $tokenId = $existingTokenArray["_id"];
+	      
+	    }
+	    else{ // Create a new token
 	    
-		  $tokenId = $this->createDocument(array("__deviceId" => $deviceId));
+	      $tokenId = $this->createDocument(array("__deviceId" => $deviceId));
 	    
 	    }
 	    
-	    foreach ($results as $result) {
+	    // Add the Token
+	    
+	    if($type != "" || isset($_REQUEST['q'])) {
+	    
+	      foreach ($results as $result) {
 	  
-	      $resultArray = $result->to("array");
+			$this->updateTokenList($result, $tokenId);
 	  
-		  if(!isset($resultArray["_token"])) {
-		
-		    $resultArray["_token"] = array();
-		
-		  }
-
-		  array_push($resultArray["_token"], $tokenId);
-
-		  $resultArray["_token"] = array_unique($resultArray["_token"]);
-
-	  	  $this->updateDocument($result->data("_id"), $resultArray);
-	  
+	      }
+	    
 	    }
-
+	    else {
+	    
+	      $this->updateTokenList($results, $tokenId);
+	    
+	    }
+	    
 	  }
 	
 	}
@@ -233,6 +241,22 @@ file_put_contents("/home/zeeshan/Desktop/fpc.txt", $existingToken);
 	$objects = Objects::find('all', array('conditions' => $conditions));
 	
 	return $objects->to('array');
+  
+  }
+
+  private function updateTokenList($objectArray, $tokenId) {
+  
+    if(!isset($objectArray["_token"])) {
+
+      $objectArray["_token"] = array();
+
+    }
+
+    array_push($objectArray["_token"], $tokenId);
+
+    $objectArray["_token"] = array_unique($objectArray["_token"]);
+
+    $this->updateDocument($objectArray["_id"], $objectArray);
   
   }
 
