@@ -242,7 +242,7 @@ class ApiController extends \lithium\action\Controller {
 
 	$mainDocument[$typePrefixed] = array_unique($mainDocument[$typePrefixed]);
 
-  	$this->updateDocument($mainDocumentId, $mainDocument);
+  	$this->updateDocument($mainDocumentId, $mainDocument, false);
 	  
 	return $insertId;
   
@@ -256,15 +256,15 @@ class ApiController extends \lithium\action\Controller {
   
   }
   
-  private function updateDocument($id, $changeData, $triggerRealtimeUpdateNotification = true) {
+  private function updateDocument($id, $changedData, $triggerRealtimeUpdateNotification = true) {
   
-    if(isset($changeData["_id"])) {
+    if(isset($changedData["_id"])) {
 
-	  unset($changeData["_id"]);
+	  unset($changedData["_id"]);
 	 
 	}
   
-    // Trigget Realtime Update Notification
+    // Trigger Realtime Update Notification
   
     if($triggerRealtimeUpdateNotification == true) {
 
@@ -295,7 +295,7 @@ class ApiController extends \lithium\action\Controller {
   
     //
   
-	return Objects::update($changeData, array('_id' => $id));
+	return Objects::update($changedData, array('_id' => $id));
 
   }
   
