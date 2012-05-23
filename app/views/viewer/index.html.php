@@ -110,7 +110,9 @@
 
 	  	<td>
 	  	
-	  	  <input type = "radio" name = "method" id = "method-post" value = "post" checked = "checked" /> <label for = "method-post">POST</label> <input type = "radio" name = "method" id = "method-get" value = "get" /> <label for = "method-get">GET</label>
+	  	  <input type = "radio" name = "method" id = "method-get" value = "get" checked = "checked" /> <label for = "method-get">GET</label>
+
+	  	  <input type = "radio" name = "method" id = "method-post" value = "post" /> <label for = "method-post">POST</label>
 	  	  
 	  	</td>
 	  

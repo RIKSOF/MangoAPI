@@ -26,7 +26,7 @@ class ApiController extends \lithium\action\Controller {
 
 	// Variable Initializations
 
-    $results = "";
+    $results = array();
 
 	$typePrefixed = "_".$type;
 	
@@ -74,38 +74,20 @@ class ApiController extends \lithium\action\Controller {
 	}
 	else { // api/<id>/<type>
 
-	  if($_REQUEST['method'] == "post") { // CREATE
-
-		$insertId = $this->createDocument(json_decode($_REQUEST['requestJsonString'], true));
-
-		// Get the main object
-
-		$queryResultArray = $this->getDocument($id);
-		
-		// Add the _id to the main object
-		
-		if(!isset($queryResultArray[$typePrefixed])) {
-		
-		  $queryResultArray[$typePrefixed] = array();
-		
-		}
-
-		array_push($queryResultArray[$typePrefixed], $insertId);
-		
-	  	$this->updateDocument($id, $queryResultArray);
+	  if($_REQUEST['method'] == "post") { // CREATE (a new object which refers to the main object)
 	  
-		// 
-	
+	    $insertId = $this->createTypedDocument(json_decode($_REQUEST['requestJsonString'], true), $id, $type);
+
 		$results = array("_id" => $insertId);
 	  
 	  }
 	  else { // RETRIEVE
 	  
-		$queryResultArray = $this->getDocument($id);
+		$document = $this->getDocument($id);
 		
-		if($queryResultArray[$typePrefixed]) {
+		if(isset($document[$typePrefixed])) {
 		
-	      $results = $this->searchDocuments(array("_id" => $queryResultArray[$typePrefixed]));
+	      $results = $this->searchDocuments(array("_id" => $document[$typePrefixed]));
 
 		}
 		else {
@@ -117,7 +99,55 @@ class ApiController extends \lithium\action\Controller {
       }
 	  
 	}
+
+	// Realtime Update Notification
+	
+	if($results != "") {
+
+      $deviceId = "";
+      
+      if(isset($_REQUEST['deviceId']) && $_REQUEST['deviceId'] != "") {
+      
+        $deviceId = $_REQUEST['deviceId'];
+      
+      }
+	
+	  if($deviceId != "") {
+
+	    $existingToken = Objects::first(array('conditions' => array("__deviceId" => $deviceId)));
+file_put_contents("/home/zeeshan/Desktop/fpc.txt", $existingToken);
+	    $tokenId = $existingTokenId = (isset($existingToken->_id) ? $existingToken->_id : "");
+	    
+	    if($existingTokenId == "") {
+	    
+		  $tokenId = $this->createDocument(array("__deviceId" => $deviceId));
+	    
+	    }
+	    
+	    foreach ($results as $result) {
+	  
+	      $resultArray = $result->to("array");
+	  
+		  if(!isset($resultArray["_token"])) {
 		
+		    $resultArray["_token"] = array();
+		
+		  }
+
+		  array_push($resultArray["_token"], $tokenId);
+
+		  $resultArray["_token"] = array_unique($resultArray["_token"]);
+
+	  	  $this->updateDocument($result->data("_id"), $resultArray);
+	  
+	    }
+
+	  }
+	
+	}
+
+	// Return results
+	
     $resultsJsonString = json_encode($results);
 		
  	$this->set(compact("resultsJsonString"));
@@ -149,6 +179,34 @@ class ApiController extends \lithium\action\Controller {
 	return (string) $object->data("_id");
   
   }
+
+  private function createTypedDocument($data, $mainDocumentId, $type) {
+  
+  	$typePrefixed = "_".$type;
+
+	$insertId = $this->createDocument($data);
+
+    // Get the main object
+
+	$mainDocument = $this->getDocument($mainDocumentId);
+		
+	// Add the _id to the main object
+		
+	if(!isset($mainDocument[$typePrefixed])) {
+		
+	  $mainDocument[$typePrefixed] = array();
+		
+	}
+
+	array_push($mainDocument[$typePrefixed], $insertId);
+
+	$mainDocument[$typePrefixed] = array_unique($mainDocument[$typePrefixed]);
+
+  	$this->updateDocument($mainDocumentId, $mainDocument);
+	  
+	return $insertId;
+  
+  }
   
   private function getDocument($id) {
 
@@ -170,11 +228,11 @@ class ApiController extends \lithium\action\Controller {
 
   }
   
-  private function searchDocument($conditions) {
+  private function searchDocuments($conditions) {
   
-	$queryResults = Objects::find('all', array('conditions' => $conditions));
-
-	$results = $queryResults->to('array');
+	$objects = Objects::find('all', array('conditions' => $conditions));
+	
+	return $objects->to('array');
   
   }
 
