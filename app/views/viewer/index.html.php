@@ -42,7 +42,7 @@
 		    
 		    },
 
-		    type: $("input:radio[name=method]:checked").val(),
+		    type: "post", // $("input:radio[name=method]:checked").val(),
 
 		    url: $("#url").val(),
 
@@ -129,7 +129,7 @@
 
 	  	  <input type = "radio" name = "method" id = "method-post" value = "post" /> <label for = "method-post">POST</label>
 	  	  
-	  	  <input type = "radio" name = "method" id = "method-delete" value = "delete" disabled = "disabled" /> <label for = "method-delete">DELETE</label>
+	  	  <input type = "radio" name = "method" id = "method-delete" value = "delete" /> <label for = "method-delete">DELETE</label>
 	  	  
 	  	</td>
 	  

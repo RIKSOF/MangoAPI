@@ -22,13 +22,13 @@ use app\models\Objects;
 
 class ApiController extends \lithium\action\Controller {
 
-  public function index($id = "", $type = "") {
+  public function index($id = "", $type = "", $typedId = "") {
 
 	// Variable Initializations
 
-	$deviceId = $_REQUEST['deviceId'];
-	$method = $_REQUEST['method'];
-	$requestJsonString = $_REQUEST['requestJsonString'];
+	$deviceId = (isset($_REQUEST['deviceId']) ? $_REQUEST['deviceId']:"");
+	$method = (isset($_REQUEST['method']) ? $_REQUEST['method']:"get");
+	$requestJsonString = (isset($_REQUEST['requestJsonString']) ? $_REQUEST['requestJsonString']:"");
 
 	$requestArray = "";
 	
@@ -70,12 +70,17 @@ class ApiController extends \lithium\action\Controller {
 	  	      $results = $this->getDocument($id);
 	  	
 		    }
-		    else { // UPDATE
+		    elseif($method == "get") { // UPDATE
 	  
 	  		  $status = $this->updateDocument($id, $requestArray);
 	  
 			  $statusMessage = array("success" => $status);
 	  
+		    }
+		    elseif($method == "delete") { // DELETE
+		    
+		      $this->deleteDocument($id);
+		    
 		    }
 	  
 		  }
@@ -119,10 +124,15 @@ class ApiController extends \lithium\action\Controller {
 		  }
 	  		  
         }
+	    elseif($method == "delete") { // DELETE
+
+		  $this->deleteDocument($id, $type, $typedId);
+	    
+	    }
 	  
 	  }
 
-	  // Realtime Update Notification
+	  // Update Tokens (to be used for Realtime Update Notifications)
 	
 	  if($results != "") {
 
@@ -259,7 +269,16 @@ class ApiController extends \lithium\action\Controller {
 
 	$queryResult = Objects::first(array('conditions' => array("_id" => $id)));
 	
-    return $queryResult->to('array');
+	if($queryResult) {
+	
+      return $queryResult->to('array');
+      
+    }
+    else {
+    
+      return array();
+    
+    }
   
   }
   
@@ -305,8 +324,7 @@ class ApiController extends \lithium\action\Controller {
       
           $notification = "Notify the following deviceId(s):\n\n".
 					      implode(", ", $deviceIds)."\n\n".
-					      "to update the object with _id:\n\n".
-					      $id."\n\n\n\n\n\n";
+					      "to update the object with _id: ".$id."\n\n\n\n\n\n";
 					      
 		}
 
@@ -331,8 +349,7 @@ class ApiController extends \lithium\action\Controller {
 
           $notification = "Notify the following deviceId(s):\n\n".
     			  		  implode(", ", $deviceIds)."\n\n".
-    			  		  "to update the sub-type '".$type."' of the object with _id:\n\n".
-    			  		  $id."\n\n\n\n\n\n";
+    			  		  "to update the sub-type '".$type."' of the object with _id: ".$id."\n\n\n\n\n\n";
     			  		  
     	}
 
@@ -409,6 +426,80 @@ class ApiController extends \lithium\action\Controller {
     else {
     
       return $array;
+    
+    }
+  
+  }
+  
+  private function deleteDocument($id, $type = "", $typedId = "") {
+  
+    if($type == "") {
+    
+      /*
+      
+      // Delete the sub Documents first
+      
+      $originalDocument = $this->getDocument($id);
+      
+      foreach($originalDocument as $key => $value) {
+      
+        if(substr($key, 0, 1) == "_") {
+        
+          if($key != "_id" && $key != "_token" && $key != "_deviceId") {
+          
+            foreach($value["_member"] as $subId) {
+            
+              Objects::remove(array("_id" => $subId));
+            
+            }
+          
+          }
+        
+        }
+      
+      }
+      
+      // Then finally Delete the Original Object itself as well
+      
+      Objects::remove(array("_id" => $id));
+      
+      */
+    
+    }
+    else {
+
+      $originalDocument = $this->getDocument($id);
+    
+      if($typedId == "") {
+
+        // Delete the sub Document Ids
+      
+        if(isset($originalDocument["_".$type])) {
+        
+          $originalDocument["_".$type]["_member"] = array();
+        
+        }
+        
+      	// Then finally Update the Original Object itself as well
+      
+      	$this->updateDocument($id, $originalDocument, true, $type); 
+      	
+      }
+      else {
+      
+        // Delete the sub Document Id
+      
+        if(isset($originalDocument["_".$type])) {
+        
+          $originalDocument["_".$type]["_member"] = array_diff($originalDocument["_".$type]["_member"], array($typedId));
+          
+        }
+        
+      	// Then finally Update the Original Object itself as well
+      
+      	$this->updateDocument($id, $originalDocument, true, $type); 
+      
+      }
     
     }
   
