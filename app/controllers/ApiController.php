@@ -36,7 +36,7 @@ class ApiController extends \lithium\action\Controller {
     
     $results = "";
     $statusMessage = "";
-
+    
 	// Validate Request
 	
 	$requestArray = $this->decodeJsonString($requestJsonString);
@@ -108,8 +108,8 @@ class ApiController extends \lithium\action\Controller {
 		  $statusMessage = array("_id" => $insertId);
 	  
  	    }
-	    else { // RETRIEVE
-	  
+	    elseif($method == "get") { // RETRIEVE
+
 		  $document = $this->getDocument($id);
 		
 		  if(isset($document[$typePrefixed])) {
@@ -149,16 +149,23 @@ class ApiController extends \lithium\action\Controller {
 	    
 	      // Add the Token
 	    
-	      if($type != "" || isset($_REQUEST['q'])) {
+	      if($type != "") {
+	    
+	    	$originalObject = $this->getDocument($id);
+	    	
+	    	$this->updateTokenList($originalObject, $tokenId, $type);
+	    
+	      }
+	      elseif (isset($_REQUEST['q'])) {	
 	    
 	        foreach ($results as $result) {
 	  
 			  $this->updateTokenList($result, $tokenId);
 	  
 	        }
-	    
+	        
 	      }
-	      else {
+	      else { // Normal
 	    
 	        $this->updateTokenList($results, $tokenId);
 	    
@@ -242,7 +249,7 @@ class ApiController extends \lithium\action\Controller {
 
 	$mainDocument[$typePrefixed]["_member"] = array_unique($mainDocument[$typePrefixed]["_member"]);
 
-  	$this->updateDocument($mainDocumentId, $mainDocument, false);
+  	$this->updateDocument($mainDocumentId, $mainDocument, true, $type);
 	  
 	return $insertId;
   
@@ -256,45 +263,94 @@ class ApiController extends \lithium\action\Controller {
   
   }
   
-  private function updateDocument($id, $changedData, $triggerRealtimeUpdateNotification = true) {
+  private function updateDocument($id, $changedData, $triggerRealtimeUpdateNotification = true, $type = "") {
   
     if(isset($changedData["_id"])) {
 
 	  unset($changedData["_id"]);
 	 
 	}
+	
+	$updateStatus = Objects::update($changedData, array('_id' => $id));
   
     // Trigger Realtime Update Notification
   
+    $deviceId = $_REQUEST['deviceId'];  
+    
+    $notification = "";   
+  
     if($triggerRealtimeUpdateNotification == true) {
-
+    
       $originalObject = $this->getDocument($id);
       
       $deviceIds = array();
       
-      foreach($originalObject["_token"] as $tokenId) {
+      if($type == "") {
+
+        foreach($originalObject["_token"] as $tokenId) {
       
-        $tokenObject = $this->getDocument($tokenId);
+          $tokenObject = $this->getDocument($tokenId);
         
-        array_push($deviceIds, $tokenObject["__deviceId"]);
+          if($tokenObject["__deviceId"] != $deviceId) { // Because the one triggering this should not get this notification
+        
+            array_push($deviceIds, $tokenObject["__deviceId"]);
+            
+          }
       
+        }
+
+	    // Trigger Now
+
+        if(count($deviceIds) > 0) {
+      
+          $notification = "Notify the following deviceId(s):\n\n".
+					      implode(", ", $deviceIds)."\n\n".
+					      "to update the object with _id:\n\n".
+					      $id."\n\n\n\n\n\n";
+					      
+		}
+
+      }
+      else {
+      
+        foreach($originalObject["_".$type]["_token"] as $tokenId) {
+      
+          $tokenObject = $this->getDocument($tokenId);
+
+          if($tokenObject["__deviceId"] != $deviceId) { // Because the one triggering this should not get this notification
+        
+            array_push($deviceIds, $tokenObject["__deviceId"]);
+            
+          }
+      
+        }
+      
+	    // Trigger Now
+      
+        if(count($deviceIds) > 0) {
+
+          $notification = "Notify the following deviceId(s):\n\n".
+    			  		  implode(", ", $deviceIds)."\n\n".
+    			  		  "to update the sub-type '".$type."' of the object with _id:\n\n".
+    			  		  $id."\n\n\n\n\n\n";
+    			  		  
+    	}
+
       }
 
-	  // Trigger Now
-      
-      error_log("Notify the following deviceId(s):\n\n".
-    			
-    			implode(", ", $deviceIds)."\n\n".
-    			"to update the objects with _id(s):\n\n".
-    			$id."\n\n\n\n\n\n", 
+	  if($notification != "") {
 
-    		 	FILE_APPEND);
-    				    
+        // error_log($notification);
+        
+        file_put_contents("/home/zeeshan/Desktop/rtun.txt", $notification, FILE_APPEND);
+        
+      }
+          				    
     }
   
     //
   
-	return Objects::update($changedData, array('_id' => $id));
+	return $updateStatus;
 
   }
   
@@ -306,19 +362,38 @@ class ApiController extends \lithium\action\Controller {
   
   }
 
-  private function updateTokenList($objectArray, $tokenId) {
+  private function updateTokenList($objectArray, $tokenId, $type = "") {
   
-    if(!isset($objectArray["_token"])) {
+    if($type == "") { // Normal Token
 
-      $objectArray["_token"] = array();
+      if(!isset($objectArray["_token"])) {
 
+        $objectArray["_token"] = array();
+
+      }
+
+      array_push($objectArray["_token"], $tokenId);
+
+      $objectArray["_token"] = array_unique($objectArray["_token"]);
+
+      $this->updateDocument($objectArray["_id"], $objectArray, false);
+      
     }
+    else { // Typed
+  
+  	  $typePrefixed = "_".$type;  
+  	  
+	  if(isset($objectArray[$typePrefixed]["_token"])) {
+	
+        array_push($objectArray[$typePrefixed]["_token"], $tokenId);
 
-    array_push($objectArray["_token"], $tokenId);
+        $objectArray[$typePrefixed]["_token"] = array_unique($objectArray[$typePrefixed]["_token"]);
 
-    $objectArray["_token"] = array_unique($objectArray["_token"]);
+        $this->updateDocument($objectArray["_id"], $objectArray, false);
 
-    $this->updateDocument($objectArray["_id"], $objectArray, false);
+	  }
+    
+    }
   
   }
 
