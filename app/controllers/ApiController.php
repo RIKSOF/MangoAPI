@@ -193,23 +193,23 @@ class ApiController extends \lithium\action\Controller {
 	
 	if($results != "") {
 
-      $responseJsonString = json_encode($results);
+      $responseJsonString = $results; // json_encode($results);
       
     }
     elseif ($statusMessage != "") {
     
-      $responseJsonString = json_encode($statusMessage);
+      $responseJsonString = $statusMessage; // json_encode($statusMessage);
     
     }
     else {
     
-      $responseJsonString = json_encode(array());
+      $responseJsonString = array(); // json_encode(array());
     
     }
 		
- 	$this->set(compact("responseJsonString"));
-		
-	return $this->render(array('layout' => false));
+	return $this->render(array("data" => compact("responseJsonString"),
+							   "layout" => false, 
+							   "type" => "json"));
 	
   }
 
@@ -357,7 +357,6 @@ class ApiController extends \lithium\action\Controller {
 
 	  if($notification != "") {
 
-        // error_log($notification);
         
         file_put_contents("/home/zeeshan/Desktop/rtun.txt", $notification, FILE_APPEND);
         
