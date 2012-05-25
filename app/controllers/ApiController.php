@@ -241,6 +241,18 @@ class ApiController extends \lithium\action\Controller {
   
   	$typePrefixed = "_".$type;
 
+    // Add the _id of the main object
+    
+	if(!isset($data["__related"])) {
+		
+	  $data["__related"] = array();
+	
+	}
+	
+	array_push($data["__related"], (object) array("_id" => $mainDocumentId, "__to" => $type));
+
+	// Create Typed Object
+	    
 	$insertId = $this->createDocument($data);
 
     // Get the main object
@@ -431,74 +443,66 @@ class ApiController extends \lithium\action\Controller {
   }
   
   private function deleteDocument($id, $type = "", $typedId = "") {
-  
-    if($type == "") {
+
+    if($type == "") { // api/<id>
     
-      /*
-      
-      // Delete the sub Documents first
-      
       $originalDocument = $this->getDocument($id);
       
-      foreach($originalDocument as $key => $value) {
-      
-        if(substr($key, 0, 1) == "_") {
+      if(isset($originalDocument["__related"])) {
+		
+	  	foreach($originalDocument["__related"] as $related) {
+	  
+	  	  $parentDocument = $this->getDocument($related["_id"]);
+	  	
+		  if(isset($parentDocument["_".$related["__to"]])) {
         
-          if($key != "_id" && $key != "_token" && $key != "_deviceId") {
-          
-            foreach($value["_member"] as $subId) {
-            
-              Objects::remove(array("_id" => $subId));
-            
-            }
+            $parentDocument["_".$related["__to"]]["_member"] = array_diff($parentDocument["_".$related["__to"]]["_member"], array($id));
           
           }
-        
-        }
+
+          // Then update the Parent Object
       
+          $this->updateDocument($related["_id"], $parentDocument, true, $related["__to"]);
+
+        }
+	
       }
       
-      // Then finally Delete the Original Object itself as well
+      // Finally delete the original Document itself
       
       Objects::remove(array("_id" => $id));
-      
-      */
     
     }
     else {
 
-      $originalDocument = $this->getDocument($id);
-    
-      if($typedId == "") {
+      $parentDocument = $this->getDocument($id);
+
+      if($typedId == "") { // api/<id>/<type>
 
         // Delete the sub Document Ids
       
-        if(isset($originalDocument["_".$type])) {
+        if(isset($parentDocument["_".$type])) {
         
-          $originalDocument["_".$type]["_member"] = array();
+          $parentDocument["_".$type]["_member"] = array();
         
         }
         
-      	// Then finally Update the Original Object itself as well
-      
-      	$this->updateDocument($id, $originalDocument, true, $type); 
-      	
       }
-      else {
+      else { // api/<id>/<type>/<typedId>
       
         // Delete the sub Document Id
       
-        if(isset($originalDocument["_".$type])) {
+        if(isset($parentDocument["_".$type])) {
         
-          $originalDocument["_".$type]["_member"] = array_diff($originalDocument["_".$type]["_member"], array($typedId));
+          $parentDocument["_".$type]["_member"] = array_diff($parentDocument["_".$type]["_member"], array($typedId));
           
         }
-        
-      	// Then finally Update the Original Object itself as well
-      
-      	$this->updateDocument($id, $originalDocument, true, $type); 
       
       }
+
+      // Then finally Update the Original Object itself as well
+      
+      $this->updateDocument($id, $parentDocument, true, $type);
     
     }
   
