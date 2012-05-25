@@ -19,6 +19,7 @@
 namespace app\controllers;
 
 use app\models\Objects;
+use app\models\Queries;
 
 class ApiController extends \lithium\action\Controller {
 
@@ -70,7 +71,7 @@ class ApiController extends \lithium\action\Controller {
 	  	      $results = $this->getDocument($id);
 	  	
 		    }
-		    elseif($method == "get") { // UPDATE
+		    elseif($method == "post") { // UPDATE
 	  
 	  		  $status = $this->updateDocument($id, $requestArray);
 	  
@@ -98,7 +99,11 @@ class ApiController extends \lithium\action\Controller {
 		  else {	
 	  
 	      	$results = $this->searchDocuments($qArray);
-	      
+
+			// Save Queries
+			
+      		Queries::create($qArray)->save();
+      
 	      }
 
 	    }
