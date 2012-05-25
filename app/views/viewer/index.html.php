@@ -103,7 +103,7 @@
 	  
 	  	<td valign = "top">URL:</td>
 
-	  	<td><input type = "text" id = "url" value = "api/index/" style = "width: 400px;" /></td>
+	  	<td><input type = "text" id = "url" value = "api/" style = "width: 400px;" /></td>
 	  	
 	  	<td valign = "top"><input type = "button" value = "Send" onclick = "send();" /></td>
 	  

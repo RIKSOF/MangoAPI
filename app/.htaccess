@@ -1,5 +1,6 @@
 <IfModule mod_rewrite.c>
     RewriteEngine on
+	RewriteRule api/(.*) webroot/api/index/$1 [L]
     RewriteRule ^$   webroot/   [L]
     RewriteRule (.*) webroot/$1 [L]
 </IfModule>
