@@ -46,7 +46,9 @@
 
 		    url: $("#url").val(),
 
-		    success: function(responseJson) {
+		    success: function(response) {
+		    
+		      responseJson = $.parseJSON(response);
 
 		  	  $("#response").html(JSON.stringify(responseJson, undefined, 2));
 

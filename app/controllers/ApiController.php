@@ -198,23 +198,22 @@ class ApiController extends \lithium\action\Controller {
 	
 	if($results != "") {
 
-      $responseJsonString = $results; // json_encode($results);
+      $responseJsonString = json_encode($results);
       
     }
     elseif ($statusMessage != "") {
     
-      $responseJsonString = $statusMessage; // json_encode($statusMessage);
+      $responseJsonString = json_encode($statusMessage);
     
     }
     else {
     
-      $responseJsonString = array(); // json_encode(array());
+      $responseJsonString = json_encode(array());
     
     }
 		
 	return $this->render(array("data" => compact("responseJsonString"),
-							   "layout" => false, 
-							   "type" => "json"));
+							   "layout" => false));
 	
   }
 
