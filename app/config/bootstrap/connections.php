@@ -48,7 +48,7 @@ Connections::add('default', array(
 	//'host' => 'ds033317.mongolab.com:33317',
 	// 'login' => 'admin',
     // 'password' => 'admin'
-	'timeout' => 100,
+	'timeout' => 1000,
     'type' => 'MongoDb',
     
 ));
