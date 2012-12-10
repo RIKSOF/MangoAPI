@@ -1,4 +1,7 @@
 <?php
+
+ini_set('memory_limit', '512M');
+
 /**
  * Lithium: the most rad php framework
  *
