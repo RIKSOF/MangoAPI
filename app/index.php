@@ -6,8 +6,7 @@
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
  
-ini_set('memory_limit', '512M');
-
+ 
 require 'webroot/index.php';
 
 ?>
