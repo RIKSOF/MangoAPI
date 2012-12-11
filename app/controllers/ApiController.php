@@ -98,7 +98,19 @@ class ApiController extends \lithium\action\Controller {
 		  }
 		  else {	
 	  
-	      	$results = $this->searchDocuments($qArray);
+	        //Set offset if given in query otherwise default to 0
+	        $offset = 0;
+	        if(isset($_REQUEST['offset'])) {
+	            $offset = $_REQUEST['offset'];
+	        }
+	        
+    	    //Set limit if given in query otherwise default to 1000
+	        $limit = 1000;
+	        if(isset($_REQUEST['limit'])) {
+	            $limit = $_REQUEST['limit'];
+	        }
+	        
+	      	$results = $this->searchDocuments($qArray, $offset, $limit);
 
 			// Save Queries
 			
@@ -386,9 +398,9 @@ class ApiController extends \lithium\action\Controller {
 
   }
   
-  private function searchDocuments($conditions) {
+  private function searchDocuments($conditions, $offset, $limit) {
   
-	$objects = Objects::find('all', array('conditions' => $conditions));
+	$objects = Objects::find('all', array('conditions' => $conditions, 'offset' => $offset, 'limit' => $limit));
 	
 	return $objects->to('array');
   

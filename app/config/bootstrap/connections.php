@@ -45,10 +45,10 @@ Connections::add('default', array(
 
 	'database' => 'nosql_framework',
 	'host' => 'localhost', 
-	//'host' => 'ds033317.mongolab.com:33317',
-	// 'login' => 'admin',
-    // 'password' => 'admin'
-	'timeout' => 100,
+	'host' => 'ds033317.mongolab.com:33317',
+	'login' => 'admin',
+    'password' => 'admin',
+	'timeout' => 5000,
     'type' => 'MongoDb',
     
 ));
