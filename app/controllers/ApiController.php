@@ -95,8 +95,14 @@ class ApiController extends \lithium\action\Controller {
       
       		$statusMessage = array("error" => "Malformed JSON");
 	
-		  }
-		  else {	
+	        //If the user has requested to count number of objects for this query
+		  } else if (isset($_REQUEST['count'])){
+            
+            $results = $this->countDocuments($qArray);
+            Queries::create($qArray)->save();
+            
+            //Or the user has asked to return objects for this query
+		  } else {	
 	  
 	        //Set offset if given in query otherwise default to 0
 	        $offset = 0;
@@ -401,8 +407,16 @@ class ApiController extends \lithium\action\Controller {
   private function searchDocuments($conditions, $offset, $limit) {
   
 	$objects = Objects::find('all', array('conditions' => $conditions, 'offset' => $offset, 'limit' => $limit));
-	
-	return $objects->to('array');
+
+    return $objects->to('array');
+  
+  }
+
+  private function countDocuments($conditions) {
+  
+	$objects = Objects::find('count', array('conditions' => $conditions));
+
+    return $objects;
   
   }
 
