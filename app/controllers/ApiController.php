@@ -414,7 +414,9 @@ class ApiController extends \lithium\action\Controller {
 
   private function countDocuments($conditions) {
   
-	$objects = Objects::find('count', array('conditions' => $conditions));
+	$count = Objects::find('count', array('conditions' => $conditions));
+
+    $objects = array( 'count' => $count );
 
     return $objects;
   
