@@ -96,12 +96,16 @@ class ApiController extends \lithium\action\Controller {
       		$statusMessage = array("error" => "Malformed JSON");
 	
 	        //If the user has requested to count number of objects for this query
-		  } else if (isset($_REQUEST['count'])){
+		  } elseif (isset( $_REQUEST['count'] )){
             
             $results = $this->countDocuments($qArray);
             Queries::create($qArray)->save();
             
             //Or the user has asked to return objects for this query
+		  } elseif ( $method == "delete" ) {
+		    
+		    $results = $this->deleteDocumentsByQuery($qArray);
+		    
 		  } else {	
 	  
 	        //Set offset if given in query otherwise default to 0
@@ -474,6 +478,12 @@ class ApiController extends \lithium\action\Controller {
   
   }
   
+  private function deleteDocumentsByQuery( $conditions = array(), $ids = array() ) {
+    
+    Objects::remove($conditions);
+    
+  }
+  
   private function deleteDocument($id, $type = "", $typedId = "") {
 
     if($type == "") { // api/<id>
@@ -537,7 +547,7 @@ class ApiController extends \lithium\action\Controller {
       $this->updateDocument($id, $parentDocument, true, $type);
     
     }
-  
+
   }
 
 }
