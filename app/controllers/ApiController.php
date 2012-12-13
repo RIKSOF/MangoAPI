@@ -104,7 +104,16 @@ class ApiController extends \lithium\action\Controller {
             //Or the user has asked to return objects for this query
 		  } elseif ( $method == "delete" ) {
 		    
-		    $results = $this->deleteDocumentsByQuery($qArray);
+		    //If objects are not related to any other object delete them directly
+		    if ( isset( $_REQUEST['unrelated'] ) ) {
+		    
+    		    $results = $this->deleteDocumentsByQuery($qArray);
+    		    
+    		} else { //If user did not specify 'unrelated' we assume there are related objects
+    		         // and should implement accordingly.
+    		    
+    		    $results = array('error' => "The API does not support mass deletion of related objects. If you are sure that the objects found in search query would not be related to any other objects. Append '&unrelated=1' to the url");
+    		}
 		    
 		  } else {	
 	  
@@ -480,7 +489,7 @@ class ApiController extends \lithium\action\Controller {
   
   private function deleteDocumentsByQuery( $conditions = array(), $ids = array() ) {
     
-    Objects::remove($conditions);
+    return Objects::remove($conditions);
     
   }
   
