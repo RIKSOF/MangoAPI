@@ -98,7 +98,7 @@ class ApiController extends \lithium\action\Controller {
 	        //If the user has requested to count number of objects for this query
 		  } elseif (isset( $_REQUEST['count'] )){
             
-            $results = $this->countDocuments($qArray);
+            $results = Objects::count($qArray);
             Queries::create($qArray)->save();
             
             //Or the user has asked to return objects for this query
@@ -422,16 +422,6 @@ class ApiController extends \lithium\action\Controller {
 	$objects = Objects::find('all', array('conditions' => $conditions, 'offset' => $offset, 'limit' => $limit));
 
     return $objects->to('array');
-  
-  }
-
-  private function countDocuments($conditions) {
-  
-	$count = Objects::find('count', array('conditions' => $conditions));
-
-    $objects = array( 'count' => $count );
-
-    return $objects;
   
   }
 
