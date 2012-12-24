@@ -38,14 +38,31 @@
 use lithium\data\Connections;
 
 /**
- * Uncomment this configuration to use MongoDB as your default database.
+ * Uncomment this configuration to use production MongoDB
+ */
+
+/*
+Connections::add('default', array(
+
+	'database' => 'dev_nosql_framework',
+	//'host' => 'localhost', 
+	'host' => 'ds033317.mongolab.com:33317',
+	'login' => 'admin',
+    'password' => 'admin',
+	'timeout' => 5000,
+    'type' => 'MongoDb',
+    
+));
+*/
+
+/**
+ * Uncomment this configuration to use development MongoDB
  */
 
 Connections::add('default', array(
 
-	'database' => 'nosql_framework',
-	'host' => 'localhost', 
-	'host' => 'ds033317.mongolab.com:33317',
+	'database' => 'dev_nosql_framework',
+	'host' => 'ds045907.mongolab.com:45907',
 	'login' => 'admin',
     'password' => 'admin',
 	'timeout' => 5000,
