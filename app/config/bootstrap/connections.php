@@ -44,7 +44,7 @@ use lithium\data\Connections;
 /*
 Connections::add('default', array(
 
-	'database' => 'dev_nosql_framework',
+	'database' => 'nosql_framework',
 	//'host' => 'localhost', 
 	'host' => 'ds033317.mongolab.com:33317',
 	'login' => 'admin',
