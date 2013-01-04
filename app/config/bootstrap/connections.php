@@ -53,12 +53,10 @@ Connections::add('default', array(
     'type' => 'MongoDb',
     
 ));
-*/
 
 /**
  * Uncomment this configuration to use development MongoDB
  */
-
 Connections::add('default', array(
 
 	'database' => 'dev_nosql_framework',
@@ -69,6 +67,22 @@ Connections::add('default', array(
     'type' => 'MongoDb',
     
 ));
+
+/**
+ * Uncomment this configuration to use staging MongoDB
+ */
+/* 
+Connections::add('default', array(
+
+	'database' => 'staging_nosql_framework',
+	'host' => 'ds047307.mongolab.com:47307',
+	'login' => 'admin',
+    'password' => 'admin',
+	'timeout' => 5000,
+    'type' => 'MongoDb',
+    
+));
+*/
 
 /**
  * Uncomment this configuration to use CouchDB as your default database.
