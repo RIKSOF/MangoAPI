@@ -95,10 +95,41 @@ class ApiController extends \lithium\action\Controller {
       
       		$statusMessage = array("error" => "Malformed JSON");
 	
-		  }
-		  else {	
+	        //If the user has requested to count number of objects for this query
+		  } elseif (isset( $_REQUEST['count'] )){
+            
+            $results = Objects::count($qArray);
+            Queries::create($qArray)->save();
+            
+            //Or the user has asked to return objects for this query
+		  } elseif ( $method == "delete" ) {
+		    
+		    //If objects are not related to any other object delete them directly
+		    if ( isset( $_REQUEST['unrelated'] ) ) {
+		    
+    		    $results = Objects::findAndDelete($qArray);
+    		    
+    		} else { //If user did not specify 'unrelated' we assume there are related objects
+    		         // and should implement accordingly.
+    		    
+    		    $results = array('error' => "The API does not support mass deletion of relational objects. If you are sure that the objects found in search query would not be related to any other objects. Append '&unrelated=1' to the url");
+    		}
+		    
+		  } else {	
 	  
-	      	$results = $this->searchDocuments($qArray);
+	        //Set offset if given in query otherwise default to 0
+	        $offset = 0;
+	        if(isset($_REQUEST['offset'])) {
+	            $offset = $_REQUEST['offset'];
+	        }
+	        
+    	    //Set limit if given in query otherwise default to 1000
+	        $limit = 1000;
+	        if(isset($_REQUEST['limit'])) {
+	            $limit = $_REQUEST['limit'];
+	        }
+	        
+	      	$results = $this->searchDocuments($qArray, $offset, $limit);
 
 			// Save Queries
 			
@@ -386,11 +417,11 @@ class ApiController extends \lithium\action\Controller {
 
   }
   
-  private function searchDocuments($conditions) {
+  private function searchDocuments($conditions, $offset, $limit) {
   
-	$objects = Objects::find('all', array('conditions' => $conditions));
-	
-	return $objects->to('array');
+	$objects = Objects::find('all', array('conditions' => $conditions, 'offset' => $offset, 'limit' => $limit));
+
+    return $objects->to('array');
   
   }
 
@@ -509,7 +540,7 @@ class ApiController extends \lithium\action\Controller {
       $this->updateDocument($id, $parentDocument, true, $type);
     
     }
-  
+
   }
 
 }
