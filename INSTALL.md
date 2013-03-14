@@ -8,8 +8,9 @@ $> git clone https://github.com/RIKSOF/MangoAPI.git mangoapi
 $> cd mangoapi
 
 3. Rewrite Rules (.htaccess files)
+   Check that you have a .htaccess file in 
 
-    i. Create .htaccess in ./ with the following content
+    i. ./ with the following content
 
     `<IfModule mod_rewrite.c>
         RewriteEngine on
@@ -18,7 +19,7 @@ $> cd mangoapi
         RewriteRule    (.*) app/webroot/$1 [L]
     </IfModule>`
 
-    ii. Create .htaccess in ./app with the following content
+    ii. ./app with the following content
     
     `<IfModule mod_rewrite.c>
         RewriteEngine on
@@ -28,7 +29,7 @@ $> cd mangoapi
         RewriteRule (.*) webroot/$1 [L]
     </IfModule>`
     
-    iii. Create .htaccess in ./app/webroot with the following content
+    iii. ./app/webroot with the following content
     
     `<IfModule mod_rewrite.c>
         RewriteEngine On
