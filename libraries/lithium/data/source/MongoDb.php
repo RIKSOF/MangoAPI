@@ -659,6 +659,16 @@ class MongoDb extends \lithium\data\Source {
 				$conditions['$or'] = $value;
 				continue;
 			}
+
+			if ($key === '$and' || $key === 'and' || $key === '&&') {
+				foreach ($value as $i => $and) {
+					$value[$i] = $this->_conditions($and, $model, $schema, $context);
+                		}
+				unset($conditions[$key]);
+	        	        $conditions['$and'] = $value;
+				continue;
+            		}
+
 			if (is_object($value)) {
 				continue;
 			}
