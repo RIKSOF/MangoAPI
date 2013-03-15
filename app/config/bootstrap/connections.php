@@ -43,13 +43,23 @@ use lithium\data\Connections;
 
 Connections::add('default', array(
 
-	'database' => 'nosql_framework',
-	'host' => 'ds033317.mongolab.com:33317',
-	'login' => 'admin',
-        'password' => 'admin'
-	'timeout' => 1000,
+	'database' => 'staging-ridefusion',
+        'host' => 'ds031117.mongolab.com:31117',
+        'login' => 'ridefusion',
+        'password' => 'r1d3fus10n',
+        'timeout' => 1000,
         'type' => 'MongoDb',
-    
+
+
+/**
+*	'database' => 'nosql_framework',
+*	'host' => 'ds033317.mongolab.com:33317',
+*	'login' => 'admin',
+*        'password' => 'admin'
+*	'timeout' => 1000,
+*        'type' => 'MongoDb',
+*/ 
+   
 ));
 
 /**
@@ -58,13 +68,13 @@ Connections::add('default', array(
 
 /*
 Connections::add('default', array(
-
-	'database' => 'dev_nosql_framework',
-	'host' => 'ds045907.mongolab.com:45907',
-	'login' => 'admin',
-        'password' => 'admin',
-	'timeout' => 5000,
+ 'database' => 'staging-ridefusion',
+        'host' => 'ds031117.mongolab.com:31117',
+        'login' => 'ridefusion',
+        'password' => 'r1d3fus10n',
+        'timeout' => 1000,
         'type' => 'MongoDb',
+
     
 ));
 */
@@ -75,12 +85,13 @@ Connections::add('default', array(
 /* 
 Connections::add('default', array(
 
-	'database' => 'staging_nosql_framework',
-	'host' => 'ds047307.mongolab.com:47307',
-	'login' => 'admin',
-        'password' => 'admin',
-	'timeout' => 5000,
+ 'database' => 'staging-ridefusion',
+        'host' => 'ds031117.mongolab.com:31117',
+        'login' => 'ridefusion',
+        'password' => 'r1d3fus10n',
+        'timeout' => 1000,
         'type' => 'MongoDb',
+
     
 ));
 */
