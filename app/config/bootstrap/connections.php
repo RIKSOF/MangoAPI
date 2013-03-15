@@ -44,7 +44,7 @@ use lithium\data\Connections;
 Connections::add('default', array(
 
 	'database' => 'staging-ridefusion',
-        'host' => 'ds031117.mongolab.com:31117',
+        'host' => 'ds051447.mongolab.com:51447',
         'login' => 'ridefusion',
         'password' => 'r1d3fus10n',
         'timeout' => 1000,
