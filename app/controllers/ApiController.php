@@ -25,144 +25,156 @@ class ApiController extends \lithium\action\Controller {
 
   public function index($id = "", $type = "", $typedId = "") {
 
-	// Variable Initializations
+      // Variable Initializations
+      $deviceId = (isset($_REQUEST['deviceId']) ? $_REQUEST['deviceId']:"");
+      $method = (isset($_REQUEST['method']) ? $_REQUEST['method']:"get");
+      $requestJsonString = (isset($_REQUEST['requestJsonString']) ? $_REQUEST['requestJsonString']:"");
 
-	$deviceId = (isset($_REQUEST['deviceId']) ? $_REQUEST['deviceId']:"");
-	$method = (isset($_REQUEST['method']) ? $_REQUEST['method']:"get");
-	$requestJsonString = (isset($_REQUEST['requestJsonString']) ? $_REQUEST['requestJsonString']:"");
+      $requestArray = "";
 
-	$requestArray = "";
+      //if specific fields to be retrieved
+      $fields = NULL;
+      if(isset($_REQUEST['fields'])) {
+        $fields = $_REQUEST['fields'];
+      }
+        
+        
+      $typePrefixed = "_".$type;
+
+      $results = "";
+      $statusMessage = "";
+
+        // Validate Request
+
+      $requestArray = $this->decodeJsonString($requestJsonString);
+
+      if($method == "post" && $requestArray == false) {
+
+        $statusMessage = array("error" => "Malformed JSON");
+
+      } else { // Algo
+
+        if($type == "") { // URL: api/<id>
 	
-    $typePrefixed = "_".$type;
-    
-    $results = "";
-    $statusMessage = "";
-    
-	// Validate Request
-	
-	$requestArray = $this->decodeJsonString($requestJsonString);
+            if(!isset($_REQUEST['q'])) {
+                
+                if($id == "") {
+                
+                    if($method == "post") { // CREATE
 
-    if($method == "post" && $requestArray == false) {
-      
-      $statusMessage = array("error" => "Malformed JSON");
-      
-	}
-	else { // Algo
+                        $insertId = $this->createDocument($requestArray);
 
-	  if($type == "") { // URL: api/<id>
-	
-	    if(!isset($_REQUEST['q'])) {
-	  
-		  if($id == "") {
-
-		    if($method == "post") { // CREATE
-
-			  $insertId = $this->createDocument($requestArray);
-
-		      $statusMessage = array("_id" => $insertId);
+                        $statusMessage = array("_id" => $insertId);
 
 		    }
 
-		  }
-		  else { 
+		} else { 
 
 		    if($method == "get") { // RETRIEVE
 
-	  	      $results = $this->getDocument($id);
+                        $results = $this->getDocument($id);
 	  	
-		    }
-		    elseif($method == "post") { // UPDATE
+		    } elseif($method == "post") { // UPDATE
+
+                        $status = $this->updateDocument($id, $requestArray);
 	  
-	  		  $status = $this->updateDocument($id, $requestArray);
+			$statusMessage = array("success" => $status);
 	  
-			  $statusMessage = array("success" => $status);
-	  
-		    }
-		    elseif($method == "delete") { // DELETE
+		    } elseif($method == "delete") { // DELETE
 		    
-		      $this->deleteDocument($id);
+                        $this->deleteDocument($id);
 		    
 		    }
 	  
-		  }
+		}
 
-	    }
-	    else { // Search
+	    } else { // Search
 
-		  $qArray = $this->decodeJsonString($_REQUEST['q']);
-		  
-    	  if($qArray == false) {
-      
-      		$statusMessage = array("error" => "Malformed JSON");
+                $qArray = $this->decodeJsonString($_REQUEST['q']);
+		
+                //check if token is send
+                if(!isset($_REQUEST['at'])) {
+                
+                    $statusMessage = array("error" => "Access Not Allowed");
+                    
+                }elseif($qArray == false) {
+
+                    $statusMessage = array("error" => "Malformed JSON");
 	
-	        //If the user has requested to count number of objects for this query
-		  } elseif (isset( $_REQUEST['count'] )){
+                    //If the user has requested to count number of objects for this query
+		} elseif (isset( $_REQUEST['count'] )){
             
-            $results = Objects::count($qArray);
-            Queries::create($qArray)->save();
-            
-            //Or the user has asked to return objects for this query
-		  } elseif ( $method == "delete" ) {
+                    $results = Objects::count($qArray);
+                    Queries::create($qArray)->save();
+
+                    //Or the user has asked to return objects for this query
+		} elseif ( $method == "delete" ) {
 		    
 		    //If objects are not related to any other object delete them directly
-		    if ( isset( $_REQUEST['unrelated'] ) ) {
+                    if ( isset( $_REQUEST['unrelated'] ) ) {
 		    
     		    $results = Objects::findAndDelete($qArray);
     		    
-    		} else { //If user did not specify 'unrelated' we assume there are related objects
+                    } else { //If user did not specify 'unrelated' we assume there are related objects
     		         // and should implement accordingly.
     		    
-    		    $results = array('error' => "The API does not support mass deletion of relational objects. If you are sure that the objects found in search query would not be related to any other objects. Append '&unrelated=1' to the url");
-    		}
+                        $results = array('error' => "The API does not support mass deletion of relational objects. If you are sure that the objects found in search query would not be related to any other objects. Append '&unrelated=1' to the url");
+                    }
 		    
-		  } else {	
+		} else {	
 	  
-	        //Set offset if given in query otherwise default to 0
-	        $offset = 0;
-	        if(isset($_REQUEST['offset'])) {
-	            $offset = $_REQUEST['offset'];
-	        }
-	        
-    	    //Set limit if given in query otherwise default to 1000
-	        $limit = 1000;
-	        if(isset($_REQUEST['limit'])) {
-	            $limit = $_REQUEST['limit'];
-	        }
-	        
-	      	$results = $this->searchDocuments($qArray, $offset, $limit);
+                    $token = $_REQUEST['at'];
+                    //check if correct token is send
+                    if(!count($this->checkToken($token))) {
+                        
+                        $statusMessage = array("error" => "Access Not Allowed");
+                        
+                    } else {
+                    
+                        //Set offset if given in query otherwise default to 0
+                        $offset = 0;
+                        if(isset($_REQUEST['offset'])) {
+                            $offset = $_REQUEST['offset'];
+                        }
 
-			// Save Queries
-			
-      		Queries::create($qArray)->save();
+                        //Set limit if given in query otherwise default to 1000
+                        $limit = 1000;
+                        if(isset($_REQUEST['limit'])) {
+                            $limit = $_REQUEST['limit'];
+                        }
+
+                        $results = $this->searchDocuments($qArray, $offset, $limit,$fields);
+
+                            // Save Queries
+
+                        Queries::create($qArray)->save();
+                    }
       
-	      }
+                }
 
 	    }
 	  
-	  }
-	  else { // URL: api/<id>/<type>
+	  } else { // URL: api/<id>/<type>
 
-	    if($method == "post") { // CREATE (a new object which refers to the main object)
-	  
-	      $insertId = $this->createTypedDocument($requestArray, $id, $type);
+            if($method == "post") { // CREATE (a new object which refers to the main object)
 
-		  $statusMessage = array("_id" => $insertId);
-	  
- 	    }
-	    elseif($method == "get") { // RETRIEVE
+                $insertId = $this->createTypedDocument($requestArray, $id, $type);
 
-		  $document = $this->getDocument($id);
+                $statusMessage = array("_id" => $insertId);
+
+            } elseif($method == "get") { // RETRIEVE
+
+                $document = $this->getDocument($id);
 		
-		  if(isset($document[$typePrefixed])) {
+		if(isset($document[$typePrefixed])) {
 		
-	        $results = $this->searchDocuments(array("_id" => $document[$typePrefixed]["_member"]));
+                    $results = $this->searchDocuments(array("_id" => $document[$typePrefixed]["_member"]));
 
-		  }
+		}
 	  		  
-        }
-	    elseif($method == "delete") { // DELETE
+            } elseif($method == "delete") { // DELETE
 
-		  $this->deleteDocument($id, $type, $typedId);
+		$this->deleteDocument($id, $type, $typedId);
 	    
 	    }
 	  
@@ -172,79 +184,74 @@ class ApiController extends \lithium\action\Controller {
 	
 	  if($results != "") {
 
-	    if($deviceId != "") {
+              if($deviceId != "") {
 
-		  // Token
-		
-	      $tokenId = "";
-	    
-	      $existingToken = Objects::first(array('conditions' => array("__deviceId" => $deviceId)));
-	    
-	      if($existingToken) { // Token already exists
+                    // Token
 
-		    $existingTokenArray = $existingToken->to('array');
+                    $tokenId = "";
 
-	        $tokenId = $existingTokenArray["_id"];
-	      
-	      }
-	      else{ // Create a new token
+                    $existingToken = Objects::first(array('conditions' => array("__deviceId" => $deviceId)));
+
+                    if($existingToken) { // Token already exists
+
+                        $existingTokenArray = $existingToken->to('array');
+
+                        $tokenId = $existingTokenArray["_id"];
+
+                    } else { // Create a new token
+
+                        $tokenId = $this->createDocument(array("__deviceId" => $deviceId));
+
+                    }
+
+                    // Add the Token
+
+                    if($type != "") {
+
+                      $originalObject = $this->getDocument($id);
+
+                      $this->updateTokenList($originalObject, $tokenId, $type);
+
+                    } elseif (isset($_REQUEST['q'])) {	
+
+                        foreach ($results as $result) {
+
+                            $this->updateTokenList($result, $tokenId);
+
+                        }
+
+                    } else { // Normal
+
+                        $this->updateTokenList($results, $tokenId);
+
+                    }
 	    
-	        $tokenId = $this->createDocument(array("__deviceId" => $deviceId));
-	    
-	      }
-	    
-	      // Add the Token
-	    
-	      if($type != "") {
-	    
-	    	$originalObject = $this->getDocument($id);
-	    	
-	    	$this->updateTokenList($originalObject, $tokenId, $type);
-	    
-	      }
-	      elseif (isset($_REQUEST['q'])) {	
-	    
-	        foreach ($results as $result) {
-	  
-			  $this->updateTokenList($result, $tokenId);
-	  
-	        }
-	        
-	      }
-	      else { // Normal
-	    
-	        $this->updateTokenList($results, $tokenId);
-	    
-	      }
-	    
-	    }
+                }
 	
-	  }
+            }
 
 	}
+    
+    // Return results
 
-	// Return results
-	
-	$responseJsonString = "";
-	
-	if($results != "") {
+    $responseJsonString = "";
 
-      $responseJsonString = json_encode($results);
-      
+    if($results != "") {
+
+        $responseJsonString = json_encode($results);
+
+    } elseif ($statusMessage != "") {
+
+        $responseJsonString = json_encode($statusMessage);
+
+    } else {
+
+        $responseJsonString = json_encode(array());
+
     }
-    elseif ($statusMessage != "") {
-    
-      $responseJsonString = json_encode($statusMessage);
-    
-    }
-    else {
-    
-      $responseJsonString = json_encode(array());
-    
-    }
-		
-	return $this->render(array("data" => compact("responseJsonString"),
-							   "layout" => false));
+
+    return $this->render(array("data" => compact("responseJsonString"),
+                                                       "layout" => false));
 	
   }
 
@@ -329,6 +336,27 @@ class ApiController extends \lithium\action\Controller {
   
   }
   
+  private function checkToken($token) {
+
+        $queryResult = Objects::first(
+                array('conditions' => 
+                    array("_doc-type" => "application","appId" => $token)));
+
+        
+
+        if($queryResult) {
+
+            return $queryResult->to('array');
+
+        }
+        else {
+
+            return array();
+
+        }
+  
+  }
+  
   private function updateDocument($id, $changedData, $triggerRealtimeUpdateNotification = true, $type = "") {
   
     if(isset($changedData["_id"])) {
@@ -405,7 +433,7 @@ class ApiController extends \lithium\action\Controller {
 	  if($notification != "") {
 
         
-        file_put_contents("/home/zeeshan/Desktop/rtun.txt", $notification, FILE_APPEND);
+        //file_put_contents("/home/zeeshan/Desktop/rtun.txt", $notification, FILE_APPEND);
         
       }
           				    
@@ -417,9 +445,13 @@ class ApiController extends \lithium\action\Controller {
 
   }
   
-  private function searchDocuments($conditions, $offset, $limit) {
-  
-	$objects = Objects::find('all', array('conditions' => $conditions, 'offset' => $offset, 'limit' => $limit));
+  private function searchDocuments($conditions, $offset, $limit,$fields) {
+        if($fields) {
+            $objects = Objects::find('all', array('conditions' => $conditions, 'offset' => $offset, 'limit' => $limit,'fields' => explode(',',$fields)));
+        } else {
+            $objects = Objects::find('all', array('conditions' => $conditions, 'offset' => $offset, 'limit' => $limit));
+        }
+	
 
     return $objects->to('array');
   
@@ -541,6 +573,51 @@ class ApiController extends \lithium\action\Controller {
     
     }
 
+  }
+  
+  public function signin() {
+      
+      $userName = $_REQUEST['username'];
+      $password = $_REQUEST['password'];
+      
+      
+      $condition = array("email" => $userName, "password" => $password);
+      
+      $result = $this->searchDocuments($condition,0,1000,NULL);
+      
+      if(count($result)) {
+        
+        if($result[0]['confirmed'] == "NO") {
+           $responseJsonString = '{"error":"Account is InActive."}'; 
+        } else {  
+            $token = uniqid("",TRUE);
+            $changedData = array("token"=>$token);
+
+            //update user token
+            $updateStatus = Objects::update($changedData, $condition);
+
+            if($updateStatus) {
+                $responseJsonString = '{"success":"Sign In Successfully",
+                                        "token":"' . $token . '"}';
+            } else {
+                $responseJsonString = '{"error":"Unknown error."}';
+            }
+        }
+      
+      } else {
+        $responseJsonString = '{"error":"Invalid Username/Password"}';
+      }
+      
+      
+      
+      
+      
+      
+      
+      return $this->render(array("data" => compact("responseJsonString"),
+                                                       "layout" => false));
+      
+      
   }
 
 }
