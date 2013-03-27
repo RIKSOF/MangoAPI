@@ -597,8 +597,9 @@ class ApiController extends \lithium\action\Controller {
             $updateStatus = Objects::update($changedData, $condition);
 
             if($updateStatus) {
-                $responseJsonString = '{"success":"Sign In Successfully",
-                                        "token":"' . $token . '"}';
+                $result[0]['success'] = "Sign In Successfully";
+                $result[0]['token'] = $token;
+                $responseJsonString = json_encode($result);
             } else {
                 $responseJsonString = '{"error":"Unknown error."}';
             }
