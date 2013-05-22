@@ -379,7 +379,7 @@ class ApiController extends \lithium\action\Controller {
       
       $deviceIds = array();
       
-      if($type == "") {
+      if($type == "" && isset($originalObject["_token"])) {
 
         foreach($originalObject["_token"] as $tokenId) {
       
@@ -404,7 +404,7 @@ class ApiController extends \lithium\action\Controller {
 		}
 
       }
-      else {
+      else if (isset($type) && $type != "") {
       
         foreach($originalObject["_".$type]["_token"] as $tokenId) {
       
